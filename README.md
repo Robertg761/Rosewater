@@ -26,10 +26,35 @@ npm start          # then scan the QR code with the Expo Go app on the phone
 npm run android    # or launch directly on a connected device/emulator
 ```
 
-To install it permanently on her phone (with working notifications), build an APK:
+To install it permanently on a phone (with working notifications), grab the latest signed APK
+from [GitHub Releases](https://github.com/Robertg761/Rosewater/releases) — or cut a new release
+as described below.
 
-```bash
-npx eas build --platform android --profile preview
-```
+## Releases & updates
 
-(Requires a free Expo account; see https://docs.expo.dev/build/setup/.)
+Releases are built and published automatically by GitHub Actions
+([release.yml](.github/workflows/release.yml)), and the installed app checks GitHub for newer
+releases (once a day on launch, or on demand from Settings → Updates) and offers the APK
+download in-app.
+
+To cut a release:
+
+1. Add a section to [CHANGELOG.md](CHANGELOG.md) headed `## [X.Y.Z] - YYYY-MM-DD` — it becomes
+   the release notes.
+2. Merge everything to `main`, then tag its HEAD and push the tag:
+
+   ```bash
+   git tag vX.Y.Z && git push origin vX.Y.Z
+   ```
+
+The workflow validates the tag (SemVer, must point at `main` HEAD), syncs `app.json` /
+`package.json` to the tag version (bumping `versionCode` so Android accepts the upgrade), builds
+a signed APK with `expo prebuild` + Gradle, publishes the GitHub Release with the changelog
+section and `Rosewater-X.Y.Z.apk` attached, and commits the version bump back to `main`.
+A `-rc.N` / `-beta.N` tag publishes a prerelease, which the in-app updater ignores unless it
+outranks the installed version.
+
+Signing uses a keystore held in the `RW_KEYSTORE_B64`, `RW_SIGNING_STORE_PASSWORD`,
+`RW_SIGNING_KEY_ALIAS`, and `RW_SIGNING_KEY_PASSWORD` repository secrets. The keystore file and
+`keystore.properties` live only on the dev machine (gitignored) — **back them up**; losing them
+means future releases can't install over existing ones.

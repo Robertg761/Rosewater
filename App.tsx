@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -14,7 +14,9 @@ import {
   Nunito_800ExtraBold,
 } from '@expo-google-fonts/nunito';
 import { Fraunces_600SemiBold, Fraunces_700Bold } from '@expo-google-fonts/fraunces';
-import { initDb } from './src/db';
+import { getSetting, initDb, setSetting } from './src/db';
+import { checkForUpdate, updatesAvailable, UpdateInfo } from './src/update';
+import UpdateSheet from './src/components/UpdateSheet';
 import { RootStackParamList, TabParamList } from './src/types';
 import { ThemeProvider, useTheme } from './src/ThemeContext';
 import { font, shadow } from './src/theme';
@@ -85,8 +87,29 @@ function Tabs() {
   );
 }
 
+/** How often the app quietly looks for a newer GitHub release on launch. */
+const UPDATE_CHECK_INTERVAL_MS = 20 * 60 * 60 * 1000;
+
 function ThemedApp() {
   const theme = useTheme();
+  const [update, setUpdate] = useState<UpdateInfo | null>(null);
+  const [updateSheetOpen, setUpdateSheetOpen] = useState(false);
+
+  useEffect(() => {
+    if (!updatesAvailable()) return;
+    const lastCheck = Number(getSetting('lastUpdateCheckAt', '0'));
+    if (Date.now() - lastCheck < UPDATE_CHECK_INTERVAL_MS) return;
+    checkForUpdate()
+      .then((info) => {
+        setSetting('lastUpdateCheckAt', String(Date.now()));
+        if (info) {
+          setUpdate(info);
+          setUpdateSheetOpen(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const navTheme = {
     ...DefaultTheme,
     dark: theme.dark,
@@ -116,6 +139,11 @@ function ThemedApp() {
         />
         <Stack.Screen name="Photos" component={PhotosScreen} />
       </Stack.Navigator>
+      <UpdateSheet
+        info={update}
+        visible={updateSheetOpen}
+        onClose={() => setUpdateSheetOpen(false)}
+      />
     </NavigationContainer>
   );
 }

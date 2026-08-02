@@ -5,6 +5,8 @@ import * as Sharing from 'expo-sharing';
 import Constants from 'expo-constants';
 import * as db from '../db';
 import * as notif from '../notifications';
+import { checkForUpdate, updatesAvailable, UpdateInfo } from '../update';
+import UpdateSheet from '../components/UpdateSheet';
 import { font, Palette, R, S, themeOrder, themes, type } from '../theme';
 import { useThemeControls, useThemedStyles, useTheme } from '../ThemeContext';
 import {
@@ -28,6 +30,9 @@ export default function SettingsScreen() {
   const [vitaminHour, setVitaminHour] = useState(Number(db.getSetting('vitaminReminderHour', '9')));
   const [trimOn, setTrimOn] = useState(db.getSetting('trimReminderOn', '0') === '1');
   const [trimWeeks, setTrimWeeks] = useState(Number(db.getSetting('trimReminderWeeks', '8')));
+  const [update, setUpdate] = useState<UpdateInfo | null>(null);
+  const [updateSheetOpen, setUpdateSheetOpen] = useState(false);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
 
   // Persist values only. Scheduling happens exclusively in the user-driven
   // handlers below: interval triggers restart their countdown when
@@ -124,6 +129,32 @@ export default function SettingsScreen() {
   };
 
   const version = Constants.expoConfig?.version ?? '1.0.0';
+
+  const checkUpdates = async () => {
+    if (!updatesAvailable()) {
+      Alert.alert(
+        'Not available in preview',
+        'Update checks are disabled in the Expo Go preview. They will work in the installed app build.'
+      );
+      return;
+    }
+    haptic.tap();
+    setCheckingUpdate(true);
+    try {
+      const info = await checkForUpdate();
+      db.setSetting('lastUpdateCheckAt', String(Date.now()));
+      if (info) {
+        setUpdate(info);
+        setUpdateSheetOpen(true);
+      } else {
+        Alert.alert('Up to date', `You're on the latest version (v${version}).`);
+      }
+    } catch (e) {
+      Alert.alert('Check failed', 'Could not reach GitHub. Try again later.');
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
 
   return (
     <View style={styles.screen}>
@@ -238,9 +269,36 @@ export default function SettingsScreen() {
         </AnimatedIn>
 
         <AnimatedIn delay={160}>
+          <SectionTitle style={{ marginTop: S.lg }}>Updates</SectionTitle>
+          <Card>
+            <View style={styles.dataRow}>
+              <IconBubble name="rocket-launch-outline" size={40} />
+              <Text style={styles.dataText}>
+                New versions are published on GitHub. Check now, or the app will quietly look once a
+                day.
+              </Text>
+            </View>
+            <PrimaryButton
+              label={checkingUpdate ? 'Checking…' : 'Check for updates'}
+              icon="update"
+              variant="soft"
+              disabled={checkingUpdate}
+              onPress={checkUpdates}
+              style={{ marginTop: S.lg }}
+            />
+          </Card>
+        </AnimatedIn>
+
+        <AnimatedIn delay={200}>
           <Text style={styles.about}>Rosewater · v{version}</Text>
         </AnimatedIn>
       </ScrollView>
+
+      <UpdateSheet
+        info={update}
+        visible={updateSheetOpen}
+        onClose={() => setUpdateSheetOpen(false)}
+      />
     </View>
   );
 }

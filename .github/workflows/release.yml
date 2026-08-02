@@ -1,0 +1,268 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    outputs:
+      release_version: ${{ steps.release_meta.outputs.release_version }}
+      is_prerelease: ${{ steps.release_meta.outputs.is_prerelease }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - id: release_meta
+        name: Resolve Release Version From Tag
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -z "${RELEASE_TAG:-}" ]; then
+            echo "Release tag is missing." >&2
+            exit 1
+          fi
+
+          if [[ ! "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid release tag: $RELEASE_TAG. Expected a SemVer tag such as v1.2.0 or v1.2.0-rc.1." >&2
+            exit 1
+          fi
+
+          RELEASE_VERSION="${RELEASE_TAG#v}"
+          echo "release_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+          VERSION_WITHOUT_BUILD="${RELEASE_VERSION%%+*}"
+          if [[ "$VERSION_WITHOUT_BUILD" == *-* ]]; then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Resolved release version $RELEASE_VERSION from tag $RELEASE_TAG"
+
+      - name: Verify Tag Points To Main HEAD
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --depth=1
+          main_head="$(git rev-parse origin/main)"
+          tag_sha="$(git rev-parse "$GITHUB_SHA")"
+
+          if [ "$tag_sha" != "$main_head" ]; then
+            echo "Release tag must point to the current origin/main HEAD." >&2
+            echo "Tag commit:  $tag_sha" >&2
+            echo "origin/main: $main_head" >&2
+            exit 1
+          fi
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Align App Version To Release Tag
+        env:
+          RELEASE_VERSION: ${{ steps.release_meta.outputs.release_version }}
+        run: node scripts/sync_app_version.js "$RELEASE_VERSION"
+
+      - name: Verify App Version Metadata
+        env:
+          RELEASE_VERSION: ${{ steps.release_meta.outputs.release_version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/get_version.js
+
+          actual_version="$(node -e 'const appJson = require("./app.json"); process.stdout.write(appJson.expo.version);')"
+
+          if [ "$actual_version" != "$RELEASE_VERSION" ]; then
+            echo "Release tag must match app.json expo.version. Expected $RELEASE_VERSION; found $actual_version." >&2
+            exit 1
+          fi
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+  build-and-release:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Tagged Commit
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Align App Version To Release Tag
+        env:
+          RELEASE_VERSION: ${{ needs.validate.outputs.release_version }}
+        run: node scripts/sync_app_version.js "$RELEASE_VERSION"
+
+      - name: Verify Signing Secrets
+        env:
+          KEYSTORE_B64: ${{ secrets.RW_KEYSTORE_B64 }}
+          STORE_PASSWORD: ${{ secrets.RW_SIGNING_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RW_SIGNING_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.RW_SIGNING_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          if [ -z "${KEYSTORE_B64:-}" ]; then echo "Missing secret: RW_KEYSTORE_B64"; missing=1; fi
+          if [ -z "${STORE_PASSWORD:-}" ]; then echo "Missing secret: RW_SIGNING_STORE_PASSWORD"; missing=1; fi
+          if [ -z "${KEY_ALIAS:-}" ]; then echo "Missing secret: RW_SIGNING_KEY_ALIAS"; missing=1; fi
+          if [ -z "${KEY_PASSWORD:-}" ]; then echo "Missing secret: RW_SIGNING_KEY_PASSWORD"; missing=1; fi
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Decode Keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.RW_KEYSTORE_B64 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/rosewater_keystore.jks"
+          echo "RW_SIGNING_STORE_FILE=$RUNNER_TEMP/rosewater_keystore.jks" >> "$GITHUB_ENV"
+
+      - name: Generate Android Project
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Configure Release Signing
+        run: node scripts/prepare_release_signing.js
+
+      - name: Build Signed Release APK
+        env:
+          RW_SIGNING_STORE_PASSWORD: ${{ secrets.RW_SIGNING_STORE_PASSWORD }}
+          RW_SIGNING_KEY_ALIAS: ${{ secrets.RW_SIGNING_KEY_ALIAS }}
+          RW_SIGNING_KEY_PASSWORD: ${{ secrets.RW_SIGNING_KEY_PASSWORD }}
+        working-directory: android
+        run: ./gradlew --no-daemon assembleRelease
+
+      - name: Prepare Dist
+        id: dist
+        env:
+          RELEASE_VERSION: ${{ needs.validate.outputs.release_version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+
+          APK_PATH="$(ls -1 android/app/build/outputs/apk/release/*.apk | head -n 1)"
+          if [ -z "$APK_PATH" ]; then
+            echo "Could not locate release APK under android/app/build/outputs/apk/release/"
+            exit 1
+          fi
+
+          OUT_APK="dist/Rosewater-${RELEASE_VERSION}.apk"
+          cp "$APK_PATH" "$OUT_APK"
+          cp assets/icon.png dist/Rosewater-logo.png
+          echo "apk_path=$OUT_APK" >> "$GITHUB_OUTPUT"
+          echo "logo_path=dist/Rosewater-logo.png" >> "$GITHUB_OUTPUT"
+
+      - name: Extract Release Notes
+        env:
+          RELEASE_VERSION: ${{ needs.validate.outputs.release_version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            node scripts/extract_changelog_section.js "$RELEASE_VERSION" || {
+              echo "## v$RELEASE_VERSION"
+              echo
+              echo "Signed release build for Rosewater $RELEASE_VERSION."
+            }
+          } > dist/release-notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: dist/release-notes.md
+          files: |
+            ${{ steps.dist.outputs.apk_path }}
+            ${{ steps.dist.outputs.logo_path }}
+          draft: false
+          prerelease: ${{ needs.validate.outputs.is_prerelease == 'true' }}
+
+      - name: Upload Artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-dist
+          path: dist/*
+
+  sync-version:
+    needs: [validate, build-and-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Tagged Commit
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+
+      - name: Align App Version To Release Tag
+        env:
+          RELEASE_VERSION: ${{ needs.validate.outputs.release_version }}
+        run: node scripts/sync_app_version.js "$RELEASE_VERSION"
+
+      - name: Commit Version Bump Back To Main
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_VERSION: ${{ needs.validate.outputs.release_version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- app.json package.json package-lock.json; then
+            echo "Version metadata already matches $RELEASE_TAG on the tagged commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "release-version-sync-$RELEASE_VERSION"
+          git add app.json package.json package-lock.json
+          git commit -m "chore: bump version to $RELEASE_VERSION"
+          git push origin HEAD:main
