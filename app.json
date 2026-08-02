@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "Rosewater",
+    "slug": "rosewater",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "backgroundColor": "#FFF4F2",
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#C25470",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.robertg761.rosewater"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-sqlite",
+      "expo-sharing",
+      "expo-notifications",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow access to your photos so you can add hair progress pictures.",
+          "cameraPermission": "Allow camera access so you can take hair progress pictures."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFF4F2",
+          "dark": {
+            "backgroundColor": "#141220"
+          }
+        }
+      ]
+    ]
+  }
+}
