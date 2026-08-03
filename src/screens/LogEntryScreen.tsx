@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -28,6 +27,7 @@ import {
   SectionTitle,
   useKeyboardHeight,
 } from '../components/ui';
+import { appAlert } from '../components/dialog';
 import { captureAndStorePhoto, removeStoredPhoto } from '../photoStore';
 import { Product, RootStackParamList } from '../types';
 
@@ -44,7 +44,7 @@ export default function LogEntryScreen() {
   const keyboard = useKeyboardHeight();
 
   const [date, setDate] = useState(route.params?.date ?? today());
-  const [type, setType] = useState('wash');
+  const [types, setTypes] = useState<string[]>(['wash']);
   const [rating, setRating] = useState<number | null>(null);
   const [note, setNote] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
@@ -71,7 +71,7 @@ export default function LogEntryScreen() {
       const e = db.getEntry(entryId);
       if (e) {
         setDate(e.date);
-        setType(e.type);
+        setTypes(e.types);
         setRating(e.rating);
         setNote(e.note);
         setSelectedProducts(new Set(e.productIds));
@@ -79,6 +79,10 @@ export default function LogEntryScreen() {
       }
     }
   }, [entryId]);
+
+  const toggleType = (t: string) => {
+    setTypes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
+  };
 
   const toggleProduct = (id: number) => {
     setSelectedProducts((prev) => {
@@ -104,7 +108,7 @@ export default function LogEntryScreen() {
   };
 
   const save = () => {
-    const data = { date, type, rating, note: note.trim() };
+    const data = { date, types, rating, note: note.trim() };
     const productIds = [...selectedProducts];
     let id: number;
     if (entryId != null) {
@@ -123,7 +127,7 @@ export default function LogEntryScreen() {
 
   const remove = () => {
     if (entryId == null) return;
-    Alert.alert('Delete entry?', 'This removes the entry from your history.', [
+    appAlert('Delete entry?', 'This removes the entry from your history.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -197,9 +201,9 @@ export default function LogEntryScreen() {
                 key={t}
                 label={entryTypeMeta[t].label}
                 icon={entryTypeMeta[t].icon}
-                selected={type === t}
+                selected={types.includes(t)}
                 color={entryTypeMeta[t].color}
-                onPress={() => setType(t)}
+                onPress={() => toggleType(t)}
               />
             ))}
           </View>
@@ -272,9 +276,16 @@ export default function LogEntryScreen() {
           ]}
         >
           <PrimaryButton
-            label={entryId != null ? 'Save changes' : 'Save entry'}
+            label={
+              types.length === 0
+                ? 'Pick what you did'
+                : entryId != null
+                  ? 'Save changes'
+                  : 'Save entry'
+            }
             icon="check"
             size="lg"
+            disabled={types.length === 0}
             onPress={save}
           />
         </View>

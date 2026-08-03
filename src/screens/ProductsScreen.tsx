@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as db from '../db';
@@ -24,6 +24,7 @@ import {
   StarRow,
   TextButton,
 } from '../components/ui';
+import { appAlert } from '../components/dialog';
 import { Product } from '../types';
 
 const CATEGORIES = [
@@ -198,7 +199,7 @@ function ProductEditor({
     const trimmed = name.trim();
     if (trimmed === '') {
       haptic.warn();
-      Alert.alert('Name needed', 'Give the product a name so you can find it later.');
+      appAlert('Name needed', 'Give the product a name so you can find it later.');
       return;
     }
     const data = { name: trimmed, category, rating, notes: notes.trim() };
@@ -216,7 +217,7 @@ function ProductEditor({
 
   const remove = () => {
     if (!product) return;
-    Alert.alert(
+    appAlert(
       'Delete product?',
       'It will also disappear from past entries. Archiving keeps your history intact.',
       [

@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import { Entry, EntryWithDetails, Photo, Product, Vitamin } from './types';
-import { WASH_TYPES } from './theme';
+import { entryTypeOrder, WASH_TYPES } from './theme';
 
 const db = SQLite.openDatabaseSync('rosewater.db');
 
@@ -56,11 +56,26 @@ export function initDb(): void {
   `);
 }
 
+// An entry can record several activities. They live comma-separated in the
+// single `type` column so rows written before multi-select (one bare type)
+// read back unchanged.
+function splitTypes(s: string): string[] {
+  return s.split(',').filter(Boolean);
+}
+
+function joinTypes(types: string[]): string {
+  const rank = (t: string) => {
+    const i = entryTypeOrder.indexOf(t);
+    return i === -1 ? entryTypeOrder.length : i;
+  };
+  return [...new Set(types)].sort((a, b) => rank(a) - rank(b)).join(',');
+}
+
 function rowToEntry(r: any): Entry {
   return {
     id: r.id,
     date: r.date,
-    type: r.type,
+    types: splitTypes(r.type),
     rating: r.rating,
     note: r.note,
     createdAt: r.created_at,
@@ -109,12 +124,12 @@ export function getEntry(id: number): EntryWithDetails | null {
 }
 
 export function insertEntry(
-  e: { date: string; type: string; rating: number | null; note: string },
+  e: { date: string; types: string[]; rating: number | null; note: string },
   productIds: number[]
 ): number {
   const res = db.runSync(
     'INSERT INTO entries (date, type, rating, note) VALUES (?, ?, ?, ?)',
-    [e.date, e.type, e.rating, e.note]
+    [e.date, joinTypes(e.types), e.rating, e.note]
   );
   const id = res.lastInsertRowId;
   setEntryProducts(id, productIds);
@@ -123,11 +138,11 @@ export function insertEntry(
 
 export function updateEntry(
   id: number,
-  e: { date: string; type: string; rating: number | null; note: string },
+  e: { date: string; types: string[]; rating: number | null; note: string },
   productIds: number[]
 ): void {
   db.runSync('UPDATE entries SET date = ?, type = ?, rating = ?, note = ? WHERE id = ?', [
-    e.date, e.type, e.rating, e.note, id,
+    e.date, joinTypes(e.types), e.rating, e.note, id,
   ]);
   // Keep linked photos on the same day as their entry
   db.runSync('UPDATE photos SET date = ? WHERE entry_id = ?', [e.date, id]);
@@ -148,10 +163,10 @@ function setEntryProducts(entryId: number, productIds: number[]): void {
 }
 
 export function lastDateOfTypes(types: string[]): string | null {
-  const placeholders = types.map(() => '?').join(',');
+  const conditions = types.map(() => `(',' || type || ',') LIKE ?`).join(' OR ');
   const row = db.getFirstSync<any>(
-    `SELECT MAX(date) AS d FROM entries WHERE type IN (${placeholders})`,
-    types
+    `SELECT MAX(date) AS d FROM entries WHERE ${conditions}`,
+    types.map((t) => `%,${t},%`)
   );
   return row?.d ?? null;
 }

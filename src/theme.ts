@@ -275,6 +275,9 @@ export interface EntryTypeMeta {
 
 export const entryTypeMeta: Record<string, EntryTypeMeta> = {
   wash: { label: 'Shampoo wash', short: 'Wash', color: '#5B93C7', icon: 'shower-head' },
+  shampoo: { label: 'Shampoo', short: 'Shampoo', color: '#3E86C4', icon: 'bottle-tonic' },
+  condition: { label: 'Condition', short: 'Condition', color: '#7D8FD4', icon: 'water-plus' },
+  shampoo_condition: { label: 'Shampoo/Condition', short: 'Sham/cond', color: '#4AA0B5', icon: 'waves' },
   cowash: { label: 'Co-wash', short: 'Co-wash', color: '#79ADD6', icon: 'water' },
   clarify: { label: 'Clarifying wash', short: 'Clarify', color: '#3F7BA8', icon: 'water-check' },
   deep: { label: 'Deep condition', short: 'Deep cond.', color: '#B4646F', icon: 'bottle-tonic-plus' },
@@ -288,6 +291,9 @@ export const entryTypeMeta: Record<string, EntryTypeMeta> = {
 
 export const entryTypeOrder = [
   'wash',
+  'shampoo',
+  'condition',
+  'shampoo_condition',
   'cowash',
   'clarify',
   'deep',
@@ -299,7 +305,18 @@ export const entryTypeOrder = [
   'other',
 ];
 
-export const WASH_TYPES = ['wash', 'cowash', 'clarify'];
+export const WASH_TYPES = ['wash', 'shampoo', 'shampoo_condition', 'cowash', 'clarify'];
+
+/** Highest-priority type of an entry, used for its icon bubble and color. */
+export function primaryEntryType(types: string[]): string {
+  return types[0] ?? 'other';
+}
+
+/** Title for an entry: full label for one type, short labels joined for several. */
+export function entryTypesLabel(types: string[]): string {
+  if (types.length <= 1) return (entryTypeMeta[types[0]] ?? entryTypeMeta.other).label;
+  return types.map((t) => (entryTypeMeta[t] ?? entryTypeMeta.other).short).join(' · ');
+}
 
 /** Icon shown next to a product category on the shelf. */
 export const categoryIcons: Record<string, string> = {

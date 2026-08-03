@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Alert,
   Animated,
   Easing,
   ScrollView,
@@ -30,6 +29,7 @@ import {
   TextButton,
   useKeyboardHeight,
 } from '../components/ui';
+import { appAlert } from '../components/dialog';
 import { Vitamin } from '../types';
 
 const SUGGESTIONS = ['Biotin', 'Iron', 'Vitamin D', 'Zinc', 'Multivitamin', 'Omega-3', 'Collagen'];
@@ -78,7 +78,7 @@ export default function VitaminsScreen() {
   };
 
   const removeVitamin = (v: Vitamin) => {
-    Alert.alert(
+    appAlert(
       `Remove ${v.name}?`,
       'Its check-off history goes too. Deactivating keeps the history and just hides it.',
       [

@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.0] - 2026-08-02
+
+### Added
+- **Multiple Activities Per Entry**: "What did you do?" now supports selecting several activities on one entry — log a wash, deep condition, and trim together. Existing entries carry over unchanged.
+- **New Activity Types**: Added "Shampoo", "Condition", and "Shampoo/Condition" options.
+
+### Changed
+- **Themed Popups**: Confirmations and messages now use Rosewater-styled dialogs instead of stock Android alerts.
+
 ## [1.0.1] - 2026-08-02
 
 ### Changed

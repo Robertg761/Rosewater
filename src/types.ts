@@ -1,7 +1,7 @@
 export interface Entry {
   id: number;
   date: string; // YYYY-MM-DD
-  type: string;
+  types: string[];
   rating: number | null;
   note: string;
   createdAt: string;

@@ -6,7 +6,7 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as db from '../db';
 import { today, daysBetween, formatDateShort, formatDateLong, greeting, relativeDay } from '../dates';
-import { entryTypeMeta, font, Palette, R, S, shadow, type, WASH_TYPES } from '../theme';
+import { entryTypeMeta, entryTypesLabel, font, Palette, primaryEntryType, R, S, shadow, type, WASH_TYPES } from '../theme';
 import { useTheme, useThemedStyles } from '../ThemeContext';
 import {
   AnimatedIn,
@@ -54,7 +54,7 @@ export default function HomeScreen() {
       const entries = db.listEntries(200);
       const photos = db.listPhotos();
       setStats({
-        wash: entries.find((e) => WASH_TYPES.includes(e.type)) ?? null,
+        wash: entries.find((e) => e.types.some((t) => WASH_TYPES.includes(t))) ?? null,
         deep: db.lastDateOfTypes(['deep']),
         trim: db.lastDateOfTypes(['trim']),
         recent: entries.slice(0, 4),
@@ -187,7 +187,7 @@ export default function HomeScreen() {
             </Card>
           ) : (
             stats.recent.map((e) => {
-              const meta = entryTypeMeta[e.type] ?? entryTypeMeta.other;
+              const meta = entryTypeMeta[primaryEntryType(e.types)] ?? entryTypeMeta.other;
               return (
                 <Card
                   key={e.id}
@@ -197,7 +197,7 @@ export default function HomeScreen() {
                   <IconBubble name={meta.icon} color={meta.color} size={42} />
                   <View style={styles.entryBody}>
                     <Text style={styles.entryTitle} numberOfLines={1}>
-                      {meta.label}
+                      {entryTypesLabel(e.types)}
                     </Text>
                     <Text style={styles.entrySub} numberOfLines={1}>
                       {relativeDay(e.date)}
@@ -225,7 +225,7 @@ export default function HomeScreen() {
 function WashHero({ days, entry }: { days: number | null; entry: EntryWithDetails | null }) {
   const theme = useTheme();
   const styles = useThemedStyles(createStyles);
-  const meta = entry ? entryTypeMeta[entry.type] ?? entryTypeMeta.other : null;
+  const meta = entry ? entryTypeMeta[primaryEntryType(entry.types)] ?? entryTypeMeta.other : null;
 
   return (
     <LinearGradient

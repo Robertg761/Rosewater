@@ -1,6 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
-  Alert,
   Image,
   Modal,
   Pressable,
@@ -28,6 +27,7 @@ import {
   ScreenHeader,
   SectionTitle,
 } from '../components/ui';
+import { appAlert } from '../components/dialog';
 import { captureAndStorePhoto, removeStoredPhoto } from '../photoStore';
 import { Photo } from '../types';
 
@@ -92,7 +92,7 @@ export default function PhotosScreen() {
 
   const deleteViewing = () => {
     if (!viewing) return;
-    Alert.alert('Delete photo?', 'This removes it from your progress journal for good.', [
+    appAlert('Delete photo?', 'This removes it from your progress journal for good.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',

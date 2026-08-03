@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import Constants from 'expo-constants';
@@ -20,6 +20,7 @@ import {
   ScreenHeader,
   SectionTitle,
 } from '../components/ui';
+import { appAlert } from '../components/dialog';
 
 export default function SettingsScreen() {
   const { theme, setThemeKey } = useThemeControls();
@@ -55,7 +56,7 @@ export default function SettingsScreen() {
 
   const ensurePermission = async (): Promise<boolean> => {
     if (!notif.remindersAvailable()) {
-      Alert.alert(
+      appAlert(
         'Not available in preview',
         'Reminders are disabled in the Expo Go preview. They will work in the installed app build.'
       );
@@ -63,7 +64,7 @@ export default function SettingsScreen() {
     }
     const granted = await notif.setupNotifications();
     if (!granted) {
-      Alert.alert(
+      appAlert(
         'Notifications blocked',
         'Allow notifications for this app in Android settings to use reminders.'
       );
@@ -121,10 +122,10 @@ export default function SettingsScreen() {
           dialogTitle: 'Export hair care data',
         });
       } else {
-        Alert.alert('Saved', `Export written to:\n${file.uri}`);
+        appAlert('Saved', `Export written to:\n${file.uri}`);
       }
     } catch (e) {
-      Alert.alert('Export failed', String(e));
+      appAlert('Export failed', String(e));
     }
   };
 
@@ -132,7 +133,7 @@ export default function SettingsScreen() {
 
   const checkUpdates = async () => {
     if (!updatesAvailable()) {
-      Alert.alert(
+      appAlert(
         'Not available in preview',
         'Update checks are disabled in the Expo Go preview. They will work in the installed app build.'
       );
@@ -147,10 +148,10 @@ export default function SettingsScreen() {
         setUpdate(info);
         setUpdateSheetOpen(true);
       } else {
-        Alert.alert('Up to date', `You're on the latest version (v${version}).`);
+        appAlert('Up to date', `You're on the latest version (v${version}).`);
       }
     } catch (e) {
-      Alert.alert('Check failed', 'Could not reach GitHub. Try again later.');
+      appAlert('Check failed', 'Could not reach GitHub. Try again later.');
     } finally {
       setCheckingUpdate(false);
     }

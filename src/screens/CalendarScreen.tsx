@@ -14,7 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import * as db from '../db';
 import { monthName, today, formatDateLong, relativeDay } from '../dates';
-import { entryTypeMeta, font, Palette, S, type } from '../theme';
+import { entryTypeMeta, entryTypesLabel, font, Palette, primaryEntryType, S, type } from '../theme';
 import { useTheme, useThemedStyles } from '../ThemeContext';
 import {
   AnimatedIn,
@@ -121,7 +121,7 @@ export default function CalendarScreen() {
 
   const legendTypes = useMemo(() => {
     const seen: string[] = [];
-    for (const e of entries) if (!seen.includes(e.type)) seen.push(e.type);
+    for (const e of entries) for (const t of e.types) if (!seen.includes(t)) seen.push(t);
     return seen;
   }, [entries]);
 
@@ -205,12 +205,12 @@ export default function CalendarScreen() {
                     </Text>
                   </View>
                   <View style={styles.dotRow}>
-                    {dayList.slice(0, 3).map((e, j) => (
+                    {[...new Set(dayList.flatMap((e) => e.types))].slice(0, 3).map((t, j) => (
                       <View
                         key={j}
                         style={[
                           styles.dot,
-                          { backgroundColor: (entryTypeMeta[e.type] ?? entryTypeMeta.other).color },
+                          { backgroundColor: (entryTypeMeta[t] ?? entryTypeMeta.other).color },
                         ]}
                       />
                     ))}
@@ -267,7 +267,7 @@ export default function CalendarScreen() {
               </Card>
             ) : (
               dayEntries.map((e) => {
-                const meta = entryTypeMeta[e.type] ?? entryTypeMeta.other;
+                const meta = entryTypeMeta[primaryEntryType(e.types)] ?? entryTypeMeta.other;
                 return (
                   <Card
                     key={e.id}
@@ -278,7 +278,7 @@ export default function CalendarScreen() {
                     <View style={styles.entryBody}>
                       <View style={styles.entryTitleRow}>
                         <Text style={styles.entryTitle} numberOfLines={1}>
-                          {meta.label}
+                          {entryTypesLabel(e.types)}
                         </Text>
                         {e.rating != null && <StarRow value={e.rating} />}
                       </View>

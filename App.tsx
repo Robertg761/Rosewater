@@ -17,6 +17,7 @@ import { Fraunces_600SemiBold, Fraunces_700Bold } from '@expo-google-fonts/fraun
 import { getSetting, initDb, setSetting } from './src/db';
 import { checkForUpdate, updatesAvailable, UpdateInfo } from './src/update';
 import UpdateSheet from './src/components/UpdateSheet';
+import { DialogHost } from './src/components/dialog';
 import { RootStackParamList, TabParamList } from './src/types';
 import { ThemeProvider, useTheme } from './src/ThemeContext';
 import { font, shadow } from './src/theme';
@@ -144,6 +145,7 @@ function ThemedApp() {
         visible={updateSheetOpen}
         onClose={() => setUpdateSheetOpen(false)}
       />
+      <DialogHost />
     </NavigationContainer>
   );
 }
