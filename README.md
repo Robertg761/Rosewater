@@ -18,6 +18,11 @@ A simple, private Android app for tracking hair care: wash days, products, vitam
 
 Expo (React Native, TypeScript), expo-sqlite for storage, expo-notifications for reminders, React Navigation (bottom tabs + modal stack). Photos are copied into the app's private storage so they survive gallery cleanups.
 
+Issue reports use the serverless API in [`report-api`](report-api). The API authenticates as a
+GitHub user through the production-only `GITHUB_ISSUE_TOKEN` Vercel environment variable. The
+route is hardcoded to create labeled issues only in `Robertg761/Rosewater`. Never include the
+token in the Expo app, logs, or Git.
+
 ## Running it
 
 ```bash

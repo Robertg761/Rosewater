@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.0] - 2026-08-15
+
+### Added
+- **Automatic Issue Reporting**: Settings now lets users send a bug report directly to the Rosewater GitHub repository. Reports include the app version and Android version, but never attach hair care records or photos.
+
 ## [1.1.0] - 2026-08-02
 
 ### Added

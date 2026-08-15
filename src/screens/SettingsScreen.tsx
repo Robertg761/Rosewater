@@ -7,6 +7,7 @@ import * as db from '../db';
 import * as notif from '../notifications';
 import { checkForUpdate, updatesAvailable, UpdateInfo } from '../update';
 import UpdateSheet from '../components/UpdateSheet';
+import ReportIssueSheet from '../components/ReportIssueSheet';
 import { font, Palette, R, S, themeOrder, themes, type } from '../theme';
 import { useThemeControls, useThemedStyles, useTheme } from '../ThemeContext';
 import {
@@ -34,6 +35,7 @@ export default function SettingsScreen() {
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
   const [updateSheetOpen, setUpdateSheetOpen] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [reportSheetOpen, setReportSheetOpen] = useState(false);
 
   // Persist values only. Scheduling happens exclusively in the user-driven
   // handlers below: interval triggers restart their countdown when
@@ -270,6 +272,26 @@ export default function SettingsScreen() {
         </AnimatedIn>
 
         <AnimatedIn delay={160}>
+          <SectionTitle style={{ marginTop: S.lg }}>Help</SectionTitle>
+          <Card>
+            <View style={styles.dataRow}>
+              <IconBubble name="bug-outline" size={40} />
+              <Text style={styles.dataText}>
+                Found something that is not working? Send a report directly to the Rosewater GitHub
+                project.
+              </Text>
+            </View>
+            <PrimaryButton
+              label="Report an issue"
+              icon="message-alert-outline"
+              variant="soft"
+              onPress={() => setReportSheetOpen(true)}
+              style={{ marginTop: S.lg }}
+            />
+          </Card>
+        </AnimatedIn>
+
+        <AnimatedIn delay={200}>
           <SectionTitle style={{ marginTop: S.lg }}>Updates</SectionTitle>
           <Card>
             <View style={styles.dataRow}>
@@ -290,7 +312,7 @@ export default function SettingsScreen() {
           </Card>
         </AnimatedIn>
 
-        <AnimatedIn delay={200}>
+        <AnimatedIn delay={240}>
           <Text style={styles.about}>Rosewater · v{version}</Text>
         </AnimatedIn>
       </ScrollView>
@@ -300,6 +322,7 @@ export default function SettingsScreen() {
         visible={updateSheetOpen}
         onClose={() => setUpdateSheetOpen(false)}
       />
+      <ReportIssueSheet visible={reportSheetOpen} onClose={() => setReportSheetOpen(false)} />
     </View>
   );
 }

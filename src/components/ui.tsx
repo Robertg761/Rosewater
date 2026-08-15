@@ -553,6 +553,7 @@ export function Input({
   onSubmitEditing,
   returnKeyType,
   autoFocus,
+  maxLength,
   style,
 }: {
   value: string;
@@ -563,6 +564,7 @@ export function Input({
   onSubmitEditing?: () => void;
   returnKeyType?: 'done' | 'next' | 'go';
   autoFocus?: boolean;
+  maxLength?: number;
   style?: StyleProp<ViewStyle>;
 }) {
   const theme = useTheme();
@@ -575,6 +577,7 @@ export function Input({
       placeholderTextColor={theme.textFaint}
       multiline={multiline}
       autoFocus={autoFocus}
+      maxLength={maxLength}
       onSubmitEditing={onSubmitEditing}
       returnKeyType={returnKeyType}
       onFocus={() => setFocused(true)}
