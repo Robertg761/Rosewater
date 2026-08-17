@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/rw_root"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent">
+
+  <ImageView
+    android:id="@+id/rw_bg_fill"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:contentDescription="@null"
+    android:scaleType="fitXY"
+    android:src="@drawable/rw_card_fill" />
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="horizontal"
+    android:padding="12dp">
+
+    <ImageView
+      android:id="@+id/rw_icon"
+      android:layout_width="21dp"
+      android:layout_height="21dp"
+      android:contentDescription="@null"
+      android:src="@drawable/rw_ic_plus" />
+
+    <TextView
+      android:id="@+id/rw_text"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="9dp"
+      android:ellipsize="end"
+      android:fontFamily="@font/rw_nunito_bold"
+      android:includeFontPadding="false"
+      android:maxLines="1"
+      android:text="@string/rw_log_a_wash_day"
+      android:textColor="#FFFFFF"
+      android:textSize="15sp" />
+  </LinearLayout>
+</FrameLayout>

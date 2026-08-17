@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.3.0] - 2026-08-17
+
+### Added
+- **Home Screen Widgets**: Four Android widgets to add from the home screen — days since your last wash, today's vitamins, a quick log button, and a combined wash, deep condition and trim summary. Vitamins can be checked off straight from the widget without opening the app, and all four follow your chosen theme.
+
 ## [1.2.0] - 2026-08-15
 
 ### Added

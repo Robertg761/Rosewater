@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Sizing note for One UI: Samsung's home screen defaults to a 4-column grid
+  (Pixel uses 5), and it derives the cell span from minWidth/minHeight. Declaring
+  these with the conservative 70n-30 formula means a 2-cell widget asks for two
+  columns on any grid density instead of rounding up to three and becoming
+  unplaceable. targetCellWidth/Height take over on API 31+ (One UI 5 and later),
+  where the span is stated directly.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+  android:description="@string/rw_widget_wash_description"
+  android:initialLayout="@layout/rw_widget_wash"
+  android:minHeight="40dp"
+  android:minResizeHeight="40dp"
+  android:minResizeWidth="110dp"
+  android:minWidth="110dp"
+  android:maxResizeHeight="180dp"
+  android:maxResizeWidth="380dp"
+  android:previewLayout="@layout/rw_widget_wash"
+  android:resizeMode="horizontal|vertical"
+  android:targetCellHeight="1"
+  android:targetCellWidth="2"
+  android:updatePeriodMillis="21600000"
+  android:widgetCategory="home_screen" />

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Shown as the widget name in the launcher's picker. -->
+  <string name="rw_widget_wash_label">Since last wash</string>
+  <string name="rw_widget_vitamins_label">Today\'s vitamins</string>
+  <string name="rw_widget_quick_log_label">Quick log</string>
+  <string name="rw_widget_glance_label">Hair at a glance</string>
+
+  <!-- One UI shows these under the name in the widget picker. -->
+  <string name="rw_widget_wash_description">How long it has been since your last wash.</string>
+  <string name="rw_widget_vitamins_description">Check off today\'s vitamins without opening the app.</string>
+  <string name="rw_widget_quick_log_description">Jump straight to logging a wash day.</string>
+  <string name="rw_widget_glance_description">Wash, deep condition and trim at a glance.</string>
+
+  <string name="rw_log_a_wash_day">Log a wash day</string>
+</resources>

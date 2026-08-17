@@ -43,3 +43,7 @@ keystore.properties
 # generated native folders
 /ios
 /android
+
+# local Expo modules keep their source, not their Gradle output
+/modules/*/android/build/
+/modules/*/android/.cxx/

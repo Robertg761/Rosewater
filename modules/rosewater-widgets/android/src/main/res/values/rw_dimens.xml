@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!--
+    One UI clips widgets to its own rounded corners. Matching the platform
+    radius keeps the card from showing square shoulders inside that clip.
+    Overridden on API 31+ with the system values.
+  -->
+  <dimen name="rw_widget_radius">20dp</dimen>
+  <dimen name="rw_widget_inner_radius">10dp</dimen>
+</resources>

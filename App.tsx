@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, LinkingOptions } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +15,7 @@ import {
 } from '@expo-google-fonts/nunito';
 import { Fraunces_600SemiBold, Fraunces_700Bold } from '@expo-google-fonts/fraunces';
 import { getSetting, initDb, setSetting } from './src/db';
+import { refreshWidgets } from './src/widgets';
 import { checkForUpdate, updatesAvailable, UpdateInfo } from './src/update';
 import UpdateSheet from './src/components/UpdateSheet';
 import { DialogHost } from './src/components/dialog';
@@ -91,10 +92,36 @@ function Tabs() {
 /** How often the app quietly looks for a newer GitHub release on launch. */
 const UPDATE_CHECK_INTERVAL_MS = 20 * 60 * 60 * 1000;
 
+/**
+ * Where the home screen widgets point. A widget can be placed before the app
+ * has ever been opened, so these have to survive a cold start.
+ */
+const linking: LinkingOptions<RootStackParamList> = {
+  prefixes: ['rosewater://'],
+  config: {
+    screens: {
+      Tabs: {
+        screens: {
+          Home: 'home',
+          Vitamins: 'vitamins',
+        },
+      },
+      LogEntry: 'log',
+    },
+  },
+};
+
 function ThemedApp() {
   const theme = useTheme();
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
   const [updateSheetOpen, setUpdateSheetOpen] = useState(false);
+
+  // A widget can be placed before the app has ever run, in which case it drew
+  // itself against a database that did not exist yet. One redraw on launch
+  // clears that out.
+  useEffect(() => {
+    refreshWidgets();
+  }, []);
 
   useEffect(() => {
     if (!updatesAvailable()) return;
@@ -124,7 +151,7 @@ function ThemedApp() {
     },
   };
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer theme={navTheme} linking={linking}>
       <StatusBar style={theme.dark ? 'light' : 'dark'} />
       <Stack.Navigator
         screenOptions={{

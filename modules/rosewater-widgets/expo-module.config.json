@@ -1,0 +1,6 @@
+{
+  "platforms": ["android"],
+  "android": {
+    "modules": ["com.robertg761.rosewater.widgets.RosewaterWidgetsModule"]
+  }
+}

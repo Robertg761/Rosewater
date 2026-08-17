@@ -1,6 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 import { Entry, EntryWithDetails, Photo, Product, Vitamin } from './types';
 import { entryTypeOrder, WASH_TYPES } from './theme';
+import { refreshWidgets } from './widgets';
 
 const db = SQLite.openDatabaseSync('rosewater.db');
 
@@ -133,6 +134,7 @@ export function insertEntry(
   );
   const id = res.lastInsertRowId;
   setEntryProducts(id, productIds);
+  refreshWidgets();
   return id;
 }
 
@@ -147,10 +149,12 @@ export function updateEntry(
   // Keep linked photos on the same day as their entry
   db.runSync('UPDATE photos SET date = ? WHERE entry_id = ?', [e.date, id]);
   setEntryProducts(id, productIds);
+  refreshWidgets();
 }
 
 export function deleteEntry(id: number): void {
   db.runSync('DELETE FROM entries WHERE id = ?', [id]);
+  refreshWidgets();
 }
 
 function setEntryProducts(entryId: number, productIds: number[]): void {
@@ -220,19 +224,23 @@ export function listVitamins(activeOnly = true): Vitamin[] {
 export function insertVitamin(name: string): number {
   const row = db.getFirstSync<any>('SELECT COALESCE(MAX(sort), 0) + 1 AS s FROM vitamins');
   const res = db.runSync('INSERT INTO vitamins (name, sort) VALUES (?, ?)', [name, row.s]);
+  refreshWidgets();
   return res.lastInsertRowId;
 }
 
 export function renameVitamin(id: number, name: string): void {
   db.runSync('UPDATE vitamins SET name = ? WHERE id = ?', [name, id]);
+  refreshWidgets();
 }
 
 export function setVitaminActive(id: number, active: boolean): void {
   db.runSync('UPDATE vitamins SET active = ? WHERE id = ?', [active ? 1 : 0, id]);
+  refreshWidgets();
 }
 
 export function deleteVitamin(id: number): void {
   db.runSync('DELETE FROM vitamins WHERE id = ?', [id]);
+  refreshWidgets();
 }
 
 export function vitaminsCheckedOn(date: string): Set<number> {
@@ -246,6 +254,7 @@ export function setVitaminChecked(vitaminId: number, date: string, checked: bool
   } else {
     db.runSync('DELETE FROM vitamin_log WHERE vitamin_id = ? AND date = ?', [vitaminId, date]);
   }
+  refreshWidgets();
 }
 
 export function vitaminDatesForMonth(year: number, month: number): Set<string> {
@@ -319,6 +328,10 @@ export function setSetting(key: string, value: string): void {
     'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
     [key, value]
   );
+  // Widgets paint from the app's palette, so they have to follow a theme
+  // change. Other settings — the update-check timestamp, say — never show up
+  // on the home screen.
+  if (key === 'theme') refreshWidgets();
 }
 
 // Export

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One tappable vitamin. The whole row toggles, not just the circle. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/rw_row"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:gravity="center_vertical"
+  android:orientation="horizontal"
+  android:paddingTop="4dp"
+  android:paddingBottom="4dp">
+
+  <ImageView
+    android:id="@+id/rw_row_check"
+    android:layout_width="19dp"
+    android:layout_height="19dp"
+    android:contentDescription="@null"
+    android:src="@drawable/rw_check_off" />
+
+  <TextView
+    android:id="@+id/rw_row_name"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="8dp"
+    android:layout_weight="1"
+    android:ellipsize="end"
+    android:fontFamily="@font/rw_nunito_bold"
+    android:includeFontPadding="false"
+    android:maxLines="1"
+    android:text="Biotin"
+    android:textColor="#35242A"
+    android:textSize="13sp" />
+</LinearLayout>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+  android:width="24dp"
+  android:height="24dp"
+  android:viewportWidth="24"
+  android:viewportHeight="24">
+  <!--
+    Filled disc with the tick cut out rather than drawn, so a single colour
+    filter paints the whole control and the card colour reads through the tick.
+  -->
+  <path
+    android:fillColor="#FFFFFFFF"
+    android:fillType="evenOdd"
+    android:pathData="M12,2 A10,10 0 0,1 12,22 A10,10 0 0,1 12,2 Z M7.6,11.6 L10.4,14.4 L16.4,8.4 L17.8,9.8 L10.4,17.2 L6.2,13 Z" />
+</vector>

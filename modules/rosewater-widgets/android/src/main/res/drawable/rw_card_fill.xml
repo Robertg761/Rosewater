@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Every themeable surface is drawn pure white and recoloured at runtime with
+  ImageView.setColorFilter, which RemoteViews can call on any API level. SRC_ATOP
+  over opaque white yields the target colour exactly while keeping the
+  antialiased rounded edge.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+  android:shape="rectangle">
+  <solid android:color="#FFFFFFFF" />
+  <corners android:radius="@dimen/rw_widget_radius" />
+</shape>

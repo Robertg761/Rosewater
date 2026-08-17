@@ -1,0 +1,77 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application>
+
+    <!--
+      Every provider listens for the date/time actions on top of the usual
+      APPWIDGET_UPDATE so that "days since" and "today's vitamins" roll over at
+      midnight without the app being opened. These actions are exempt from the
+      Android 8 implicit-broadcast restrictions, so a manifest receiver still
+      gets them.
+    -->
+    <receiver
+      android:name=".WashWidget"
+      android:exported="true"
+      android:label="@string/rw_widget_wash_label">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        <action android:name="android.intent.action.DATE_CHANGED" />
+        <action android:name="android.intent.action.TIME_SET" />
+        <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+      </intent-filter>
+      <meta-data
+        android:name="android.appwidget.provider"
+        android:resource="@xml/rw_widget_wash_info" />
+    </receiver>
+
+    <receiver
+      android:name=".VitaminsWidget"
+      android:exported="true"
+      android:label="@string/rw_widget_vitamins_label">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        <action android:name="android.intent.action.DATE_CHANGED" />
+        <action android:name="android.intent.action.TIME_SET" />
+        <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+      </intent-filter>
+      <meta-data
+        android:name="android.appwidget.provider"
+        android:resource="@xml/rw_widget_vitamins_info" />
+    </receiver>
+
+    <receiver
+      android:name=".QuickLogWidget"
+      android:exported="true"
+      android:label="@string/rw_widget_quick_log_label">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+      </intent-filter>
+      <meta-data
+        android:name="android.appwidget.provider"
+        android:resource="@xml/rw_widget_quick_log_info" />
+    </receiver>
+
+    <receiver
+      android:name=".GlanceWidget"
+      android:exported="true"
+      android:label="@string/rw_widget_glance_label">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        <action android:name="android.intent.action.DATE_CHANGED" />
+        <action android:name="android.intent.action.TIME_SET" />
+        <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+      </intent-filter>
+      <meta-data
+        android:name="android.appwidget.provider"
+        android:resource="@xml/rw_widget_glance_info" />
+    </receiver>
+
+    <!--
+      Only ever triggered by PendingIntents this app creates, so it stays
+      unexported.
+    -->
+    <receiver
+      android:name=".VitaminToggleReceiver"
+      android:exported="false" />
+
+  </application>
+</manifest>

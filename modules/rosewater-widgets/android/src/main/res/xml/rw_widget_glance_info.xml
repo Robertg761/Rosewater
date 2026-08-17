@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Four cells wide is full width on One UI's default grid, so minWidth stays at
+  the 4-column figure (250dp) rather than a 5-column one, which Samsung would
+  round up to a span the grid cannot satisfy.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+  android:description="@string/rw_widget_glance_description"
+  android:initialLayout="@layout/rw_widget_glance"
+  android:minHeight="110dp"
+  android:minResizeHeight="110dp"
+  android:minResizeWidth="180dp"
+  android:minWidth="250dp"
+  android:maxResizeHeight="300dp"
+  android:maxResizeWidth="600dp"
+  android:previewLayout="@layout/rw_widget_glance"
+  android:resizeMode="horizontal|vertical"
+  android:targetCellHeight="2"
+  android:targetCellWidth="4"
+  android:updatePeriodMillis="21600000"
+  android:widgetCategory="home_screen" />
